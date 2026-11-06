@@ -4,6 +4,12 @@ Mock de alta fidelidad, solo con datos de ejemplo. **No es una app funcional.** 
 
 Importado del zip de Josué (jvalles.cr). Esta carpeta es el espacio de trabajo de ese artefacto, no un producto nuevo. Paleta, tipografías, logos y copys de marca se conservan. Los logos en `img/` son provisionales (P4a): no son un logo oficial cerrado.
 
+## Abrir en línea
+
+Prototipo público (mock estático): https://milasur.github.io/loomi-prototipo-hackatob2026/
+
+Repo: https://github.com/Milasur/loomi-prototipo-hackatob2026
+
 ## Abrir en local
 
 Las fuentes y las imágenes van en `fonts/` e `img/`, así que el mock también abre directo con `index.html`.
