@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="es-CR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="icon" type="image/svg+xml" href="img/app-icon-512_v1.svg">
+<link rel="apple-touch-icon" href="img/app-icon-512_v1.png">
+<title>loomi · prototipo</title>
+<style>
+@font-face{font-family:"Bricolage Grotesque";src:url(fonts/bricolage-800.woff2) format("woff2");font-weight:800;font-display:swap}
+@font-face{font-family:"Bricolage Grotesque";src:url(fonts/bricolage-600.woff2) format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:"Inter";src:url(fonts/inter-400.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Inter";src:url(fonts/inter-700.woff2) format("woff2");font-weight:700;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url(fonts/plexmono-500.woff2) format("woff2");font-weight:500;font-display:swap}
+:root{
+  --tinta:#14210F;--hoja:#1E6B3A;--brote:#B7E04A;--pina:#F5B800;--cascara:#E8761E;--fibra:#FFF6DC;--tierra:#8A5A2B;
+  --card:#FFFBEE;--suave:#E8EEC0;--mute:#4F5642;--hoja-deep:#164f2c;--pina-soft:#F7D45C;--cascara-soft:#F0A06A;
+  --f-tit:"Bricolage Grotesque",system-ui,sans-serif;--f-txt:Inter,system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,monospace;
+  --r:16px;--r-lg:22px;--shadow:0 6px 20px rgba(20,33,15,.10);--shadow-lg:0 12px 40px rgba(20,33,15,.18);
+  --space:8px;--safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--tinta);color:var(--tinta);font:18px/1.45 var(--f-txt)}
+button,input,select{font:inherit;color:inherit}
+h1,h2,h3,.tit{font-family:var(--f-tit);font-weight:800;letter-spacing:-.02em;margin:0}
+.mono{font-family:var(--f-mono);font-weight:500;letter-spacing:.04em;text-transform:uppercase;font-size:11px}
+.ej{display:inline-block;background:var(--brote);color:var(--tinta);font-family:var(--f-mono);font-size:10px;font-weight:500;padding:3px 7px;border-radius:6px;letter-spacing:.05em;text-transform:uppercase;vertical-align:middle}
+.tag{display:inline-block;background:var(--suave);color:var(--hoja);font-size:13px;padding:4px 10px;border-radius:999px;margin:2px;font-weight:600}
+.prov{font-family:var(--f-mono);font-size:11px;color:var(--mute);letter-spacing:.03em}
+
+/* Phone frame — height:100% avoids Fibra band above header */
+.stage{height:100%;display:flex;align-items:stretch;justify-content:center;padding:0;background:var(--tinta)}
+.phone{width:100%;max-width:390px;height:100%;background:var(--fibra);overflow:hidden;position:relative;display:flex;flex-direction:column;margin:0 auto}
+@media(min-width:441px){
+  .stage{padding:24px;align-items:center;background:
+    radial-gradient(ellipse at 30% 20%,rgba(30,107,58,.4),transparent 50%),
+    radial-gradient(ellipse at 70% 80%,rgba(245,184,0,.12),transparent 45%),#121a10}
+  .phone{height:min(844px,calc(100% - 0px));max-height:100%;border-radius:36px;box-shadow:0 0 0 10px #0e150c,0 0 0 12px #2a3a26,0 40px 80px rgba(0,0,0,.45)}
+}
+html.shot .stage{padding:0!important;background:var(--fibra)!important;align-items:stretch!important}
+html.shot .phone{max-width:none;width:100%;height:100%;border-radius:0!important;box-shadow:none!important}
+
+.app{flex:1;min-height:0;display:flex;flex-direction:column;position:relative;overflow:hidden;background:var(--fibra)}
+.app::before{content:"";pointer-events:none;position:absolute;inset:0;opacity:.03;z-index:50;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+.hdr{background:var(--hoja);color:var(--fibra);padding:8px 12px;display:flex;align-items:center;gap:8px;min-height:52px;position:relative;z-index:5;flex-shrink:0}
+.hdr .back{background:rgba(255,246,220,.15);border:0;color:var(--fibra);border-radius:10px;width:40px;height:40px;font-size:20px;cursor:pointer;display:grid;place-items:center}
+.hdr .back:active{transform:scale(.95)}
+.hdr h1{flex:1;font-size:17px;color:var(--fibra);display:flex;align-items:center;gap:8px;min-width:0}
+.hdr-logo{height:26px;width:auto;display:block}
+.hdr .demo-pill{font-family:var(--f-mono);font-size:10px;background:rgba(255,246,220,.16);border:1px solid rgba(255,246,220,.25);color:var(--fibra);padding:5px 8px;border-radius:8px;letter-spacing:.06em;cursor:pointer}
+
+.scroll{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 96px;position:relative;z-index:1}
+.scroll.nopad{padding:0;display:flex;flex-direction:column;flex:1;min-height:0;height:100%}
+
+section.scr{display:none;flex:1;min-height:0;flex-direction:column}
+section.scr.on{display:flex;flex-direction:column;animation:in .32s cubic-bezier(.2,.7,.2,1) both}
+section.scr.on:not([data-nopad="1"]){display:block;flex:none}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+html.shot section.scr.on{animation:none}
+
+.btn{display:block;width:100%;text-align:left;border:0;border-radius:var(--r);padding:15px 16px;margin:8px 0;font-family:var(--f-tit);font-weight:800;font-size:17px;min-height:56px;background:var(--hoja);color:var(--fibra);cursor:pointer;transition:transform .12s,box-shadow .12s;box-shadow:0 2px 0 var(--hoja-deep)}
+.btn:active{transform:scale(.985) translateY(1px);box-shadow:none}
+.btn small{display:block;font-family:var(--f-txt);font-weight:400;font-size:13px;opacity:.9;margin-top:2px}
+.btn.alt{background:var(--card);color:var(--hoja);border:2px solid var(--hoja);box-shadow:none}
+.btn.pina{background:var(--pina);color:var(--tinta);box-shadow:0 2px 0 #c99700}
+.btn.ghost{background:transparent;color:var(--hoja);border:1.5px dashed var(--hoja);box-shadow:none;text-align:center;min-height:48px}
+
+.card{background:var(--card);border-radius:var(--r);padding:14px 16px;margin:10px 0;box-shadow:var(--shadow);position:relative}
+.card .cross{position:absolute;top:8px;right:10px;color:var(--mute);font-size:10px;opacity:.35;font-family:var(--f-mono)}
+.role{position:relative;overflow:hidden;padding-left:22px}
+.role::before{content:"";position:absolute;left:0;top:0;bottom:0;width:8px}
+.role.r1::before{background:var(--brote)}.role.r2::before{background:var(--pina)}.role.r3::before{background:var(--cascara)}
+
+.logo-hero{text-align:center;padding:12px 0 4px}
+.logo-hero img{height:84px;width:auto}
+.hero-tag{font-family:var(--f-tit);font-weight:800;font-size:24px;color:var(--hoja);line-height:1.2;margin:12px 0 8px}
+.pitch{margin:0 0 6px;font-size:16px;line-height:1.5}
+
+label{display:block;font-weight:700;margin:12px 0 6px;font-size:14px}
+input,select{width:100%;font-size:17px;padding:12px 14px;border:1.5px solid #c9cba8;border-radius:12px;background:var(--card);min-height:50px}
+input:focus,select:focus{outline:2px solid var(--hoja);border-color:var(--hoja)}
+
+.step{display:flex;gap:12px;margin:10px 0;align-items:flex-start}
+.dot{flex:none;width:28px;height:28px;border-radius:50%;background:var(--hoja);color:var(--fibra);display:flex;align-items:center;justify-content:center;font-family:var(--f-tit);font-weight:800;font-size:13px}
+.big{font-family:var(--f-tit);font-weight:800;font-size:32px;color:var(--hoja);line-height:1}
+.row{display:flex;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--suave);font-size:15px}
+.row:last-child{border:0}
+
+/* Bottom nav */
+.bnav{position:absolute;left:0;right:0;bottom:0;background:rgba(255,251,238,.96);backdrop-filter:blur(10px);border-top:1px solid var(--suave);display:none;gap:0;padding:4px 2px calc(6px + var(--safe-b));z-index:20}
+.bnav.on{display:flex}
+.bnav button{flex:1;background:0;border:0;padding:6px 2px;font-size:10px;font-family:var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--mute);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:54px}
+.bnav button.on{color:var(--hoja)}
+.bnav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.bnav button.on svg{stroke:var(--hoja)}
+
+/* Map */
+.map-screen{flex:1;min-height:0;display:flex;flex-direction:column;position:relative;background:#E5E6C4}
+.chipbar{flex-shrink:0;background:var(--fibra);box-shadow:0 4px 14px rgba(20,33,15,.10);z-index:4;padding:8px 0;position:relative}.chipbar::after{content:"";position:absolute;top:0;right:0;bottom:0;width:28px;background:linear-gradient(90deg,transparent,var(--fibra));pointer-events:none}
+.chipbar-scroll{display:flex;gap:8px;overflow-x:auto;padding:0 12px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.chipbar-scroll::-webkit-scrollbar{display:none}
+.chip{flex:none;background:var(--card);border:1.5px solid var(--hoja);color:var(--tinta);font-family:var(--f-mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;padding:8px 12px;border-radius:999px;cursor:pointer;min-height:34px;white-space:nowrap}
+.chip .n{opacity:.65;margin-left:4px}
+.chip.on{background:var(--hoja);color:var(--fibra);border-color:var(--hoja)}
+.map-wrap{flex:1;min-height:0;position:relative;overflow:hidden;padding:2px 2px 56px}
+.map-svg{width:100%;height:100%;display:block;padding:4px}
+.map-legend{position:absolute;bottom:8px;left:10px;right:10px;background:rgba(255,246,220,.94);backdrop-filter:blur(8px);border-radius:14px;padding:10px 12px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:12px;z-index:3;box-shadow:var(--shadow)}
+.map-legend .mono{color:var(--mute)}
+.leg{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--tinta)}
+.pulse{animation:pulse 2s ease-out infinite}
+@keyframes pulse{0%{r:8;opacity:.85}100%{r:24;opacity:0}}
+.map-mini{height:148px;border-radius:var(--r);overflow:hidden;position:relative;background:#E5E6C4;margin:8px 0;box-shadow:inset 0 0 0 1px rgba(20,33,15,.08)}
+.map-mini .map-svg{height:148px}
+
+/* Bottom sheet — peek ~40% */
+.sheet-bg{position:absolute;inset:0;background:rgba(20,33,15,.35);z-index:30;opacity:0;pointer-events:none;transition:opacity .25s}
+.sheet-bg.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--fibra);border-radius:22px 22px 0 0;z-index:31;transform:translateY(100%);transition:transform .32s cubic-bezier(.2,.8,.2,1);max-height:88%;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)}
+.sheet.peek{transform:translateY(0);height:42%;}
+.sheet.full{transform:translateY(0);height:78%;}
+.sheet .handle{width:40px;height:4px;background:var(--suave);border-radius:4px;margin:10px auto 6px;flex-shrink:0;cursor:pointer}
+.sheet-body{overflow:auto;padding:4px 16px calc(18px + var(--safe-b));flex:1;-webkit-overflow-scrolling:touch}
+.qrbox{width:132px;height:132px;margin:8px auto;display:block;background:var(--card);border-radius:12px;padding:6px}
+
+.toast{position:absolute;left:16px;right:16px;bottom:90px;background:var(--tinta);color:var(--fibra);padding:12px 14px;border-radius:14px;z-index:40;transform:translateY(16px);opacity:0;transition:.3s;font-size:14px;pointer-events:none;box-shadow:var(--shadow)}
+.toast.on{opacity:1;transform:none}
+.ok-anim{width:68px;height:68px;margin:8px auto;border-radius:50%;background:var(--brote);display:grid;place-items:center;animation:pop .4s cubic-bezier(.2,1.4,.3,1)}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+.ok-anim svg{width:32px;height:32px}
+
+.demo{position:absolute;top:56px;left:10px;right:10px;z-index:25;display:none;align-items:center;gap:8px;background:rgba(20,33,15,.9);color:var(--fibra);border-radius:12px;padding:7px 9px}
+.demo.on{display:flex}
+.demo button{background:var(--hoja);border:0;color:var(--fibra);border-radius:8px;min-width:36px;min-height:34px;font-family:var(--f-tit);font-weight:800;cursor:pointer}
+.demo .lab{flex:1;font-family:var(--f-mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;line-height:1.3}
+
+.estado{display:inline-block;padding:3px 8px;border-radius:6px;font-family:var(--f-mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;font-weight:500}
+.e-reg{background:var(--suave);color:var(--hoja)}
+.e-plan{background:var(--brote);color:var(--tinta)}
+.e-ped{background:var(--pina-soft);color:var(--tinta)}
+.e-ruta{background:var(--pina);color:var(--tinta)}
+.e-rec{background:var(--cascara-soft);color:var(--tinta)}
+.e-proc{background:var(--hoja);color:var(--fibra)}
+.e-ven{background:var(--cascara);color:var(--tinta)}
+.e-act{background:var(--suave);color:var(--hoja)}
+.e-no{background:var(--cascara);color:var(--tinta)}
+.e-late{background:var(--tierra);color:var(--fibra)}
+
+.tech{position:relative}
+.tech::after{content:"+";position:absolute;top:6px;right:8px;font-family:var(--f-mono);font-size:10px;color:var(--mute);opacity:.35}
+.pt{cursor:pointer}
+</style>
+</head>
+<body>
+<div class="stage"><div class="phone"><div class="app" id="app">
+
+<header class="hdr">
+  <button class="back" id="back" onclick="atras()" aria-label="Volver">‹</button>
+  <h1 id="tit"></h1>
+  <button class="demo-pill" onclick="toggleDemo()" type="button">DEMO</button>
+</header>
+
+<div class="demo" id="demoBar">
+  <button type="button" onclick="demoPrev()" aria-label="Anterior">‹</button>
+  <div class="lab" id="demoLab">—</div>
+  <button type="button" onclick="demoNext()" aria-label="Siguiente">›</button>
+</div>
+
+<main class="scroll" id="main">
+
+<section class="scr" data-id="inicio" data-t="loomi" data-nav="">
+  <div class="logo-hero">
+    <img src="img/wordmark-master-claro_v1.svg" alt="loomi">
+    <div class="prov">logo provisional</div>
+  </div>
+  <p class="hero-tag">loomi. Del rastrojo al recurso.</p>
+  <p class="pitch">loomi traza residuos agrícolas lote por lote; empieza con el rastrojo de piña: el plan del Decreto 44021 gratis para el piñero, y el rastrojo convertido en fibra, alimento y empaque, con QR de origen en cada lote.</p>
+  <p class="prov">Textos de marca provisionales (v0) · datos de ejemplo</p>
+  <h2 style="margin:20px 0 10px;font-size:20px">¿Quién sos?</h2>
+  <button class="btn role r1" onclick="entrar('pinero')">Soy piñero<small>Tu finca, tu plan y tu bono</small></button>
+  <button class="btn role r2" onclick="entrar('acopio')">Centro de acopio<small>Rutas y recepción de lotes</small></button>
+  <button class="btn role r3" onclick="entrar('comprador')">Soy comprador<small>Origen comprobado por QR</small></button>
+  <button class="btn ghost" onclick="go('mapa')">Ver el mapa vivo</button>
+</section>
+
+<section class="scr" data-id="mapa" data-t="Mapa vivo" data-nav="mapa" data-nopad="1">
+  <div class="map-screen">
+    <div class="chipbar"><div class="chipbar-scroll" id="filtros"></div></div>
+    <div class="map-wrap">
+      <div id="mapaSvgHost" style="position:absolute;inset:0"></div>
+      <div class="map-legend" id="mapLegend">
+        <span class="leg"><svg width="14" height="14" viewBox="0 0 16 16"><path d="M8 1.5L14 14H2Z" fill="#1E6B3A"/></svg>Finca</span>
+        <span class="leg"><svg width="14" height="14" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="2" fill="#F5B800"/></svg>Acopio</span>
+        <span class="leg"><svg width="14" height="14" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="#E8761E"/></svg>Comprador</span>
+        <span class="mono">· ejemplo · zona norte</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="scr" data-id="p-home" data-t="Tu finca" data-nav="pinero">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px">
+    <h2 style="font-size:22px">Hola, Don Carlos</h2><span class="ej">ejemplo</span>
+  </div>
+  <p style="color:var(--hoja);font-family:var(--f-tit);font-weight:800;font-size:17px;margin:4px 0 2px">Registrá tu lote y te armamos el plan del 44021. Gratis.</p>
+  <p class="prov">Texto provisional (v0)</p>
+  <div class="card tech">
+    <b>Finca La Esperanza · Pital</b><br>
+    <span class="tag">Lote 3 · 4 ha</span> <span class="tag">Derriba: 6 nov</span>
+    <div style="margin-top:8px"><span class="estado e-ruta">en ruta</span></div>
+  </div>
+  <div class="map-mini" id="mapMiniP"></div>
+  <button class="btn" onclick="go('p-registro')">Registrá tu finca</button>
+  <button class="btn" onclick="go('p-plan')">Ver mi plan<small>Plan 44021 gratis · calendario de trampas</small></button>
+  <button class="btn pina" onclick="go('p-recol')">Pedí la recolección</button>
+  <button class="btn alt" onclick="go('p-bono')">Mirá tu bono</button>
+</section>
+
+<section class="scr" data-id="p-registro" data-t="Registrá tu lote" data-nav="pinero">
+  <h2 style="font-size:20px;margin-bottom:2px">Registrá tu lote</h2>
+  <p class="prov" style="margin-bottom:8px">Solo unos datos. Con esto te armamos el plan.</p>
+  <label>Nombre de la finca</label><input value="Finca La Esperanza">
+  <label>Cantón / distrito</label>
+  <select><option>Pital, San Carlos</option><option>Río Cuarto</option><option>Cutris</option></select>
+  <label>Hectáreas del lote</label><input inputmode="decimal" value="4">
+  <label>Fecha de derriba</label><input type="date" value="2026-11-06">
+  <label>Corte de hoja (antes de cualquier químico)</label><input type="date" value="2026-11-03">
+  <button class="btn" onclick="go('p-plan');toast('Plan generado · ejemplo')">Generá el plan</button>
+</section>
+
+<section class="scr" data-id="p-plan" data-t="Plan 44021" data-nav="pinero">
+  <h2 style="font-size:20px;margin-bottom:8px">Tu plan está listo</h2>
+  <div class="card tech">
+    <span class="mono" style="color:var(--hoja)">Decreto 44021-MAG</span>
+    <p style="margin:6px 0 8px">Para presentar ante la <b>DNEA del MAG o el SFE</b>.</p>
+    <span class="ej">ejemplo · lote 3, 4 ha</span>
+  </div>
+  <div class="card">
+    <b>Calendario de trampas</b>
+    <div class="step"><div class="dot">1</div><div><b>5 nov</b> (24 h antes): trampas cada 10 m en la finca, con la fecha en cada trampa.</div></div>
+    <div class="step"><div class="dot">2</div><div><b>5 nov</b>: trampas cada 20 m en fincas ganaderas vecinas.</div></div>
+    <div class="step"><div class="dot">3</div><div><b>6 nov</b>: derriba. Procesar el rastrojo en 10 a 12 días.</div></div>
+  </div>
+  <div class="card">
+    <b>Reparto del rastrojo</b><br>
+    <span class="tag">Hojas → fibra</span>
+    <span class="tag">Ensilaje</span>
+    <span class="tag">Incorporación en verde</span>
+  </div>
+  <button class="btn" onclick="toast('PDF del plan · prototipo')">Descargá el plan</button>
+  <button class="btn pina" onclick="go('p-recol')">Pedí la recolección</button>
+</section>
+
+<section class="scr" data-id="p-recol" data-t="Recolección" data-nav="pinero">
+  <h2 style="font-size:20px">Pedí la recolección</h2>
+  <p class="prov">Coordinamos el camión al centro de acopio.</p>
+  <label>¿Qué lote?</label><select><option>Lote 3 · 4 ha · LM-0423</option></select>
+  <label>Día preferido</label><select><option>Hoy 4 nov (tarde)</option><option>Mié 5 nov (mañana)</option></select>
+  <label>Destino</label><select><option>Centro de acopio Coopepiña · Pital (ejemplo)</option><option>Centro de acopio Coopepiña · Río Cuarto (ejemplo)</option></select>
+  <p class="prov" style="margin-top:10px">Recordá: la hoja se corta antes de cualquier químico; si lleva paraquat no sirve para fibra ni ensilaje.</p>
+  <button class="btn" onclick="go('p-ok')">Confirmá</button>
+</section>
+
+<section class="scr" data-id="p-ok" data-t="Listo" data-nav="pinero">
+  <div class="ok-anim"><svg viewBox="0 0 24 24" fill="none" stroke="#14210F" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>
+  <h2 style="text-align:center;font-size:20px">Solicitud enviada</h2>
+  <div class="card" style="text-align:center">
+    <div class="prov">Tu lote</div>
+    <svg class="qrbox" id="qr1"></svg>
+    <b>LOTE LM-0423</b> <span class="ej">ejemplo</span>
+  </div>
+  <p style="text-align:center;font-size:15px">Te avisamos cuando el centro de acopio confirme la ruta.</p>
+  <button class="btn" onclick="go('p-home')">Volvé a tu finca</button>
+  <button class="btn alt" onclick="go('mapa');setTimeout(()=>openSheet('LM-0423'),50)">Ver en el mapa</button>
+</section>
+
+<section class="scr" data-id="p-bono" data-t="Tu bono" data-nav="pinero">
+  <h2 style="font-size:20px">Tu bono</h2>
+  <div class="card tech">
+    <p style="margin:0 0 8px">Beneficio desde el día uno:</p>
+    <span class="tag">Plan 44021 gratis</span>
+    <span class="tag">Descuento en el manejo</span>
+  </div>
+  <div class="card">
+    <p style="margin:0">Bono por la fibra vendida de tu lote:</p>
+    <div class="big" style="margin:8px 0">Por definir</div>
+    <p class="prov">Los porcentajes del bono aún no están definidos.</p>
+  </div>
+  <div class="card">
+    <b>Historial</b> <span class="ej">ejemplo</span>
+    <div class="row"><span>LM-0423</span><span class="estado e-ruta">en ruta</span></div>
+    <div class="row"><span>LM-0388 · fibra</span><span class="estado e-ven">vendido</span></div>
+  </div>
+</section>
+
+<section class="scr" data-id="a-home" data-t="Rutas" data-nav="acopio">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <h2 style="font-size:20px">Rutas de hoy</h2><span class="ej">ejemplo</span>
+  </div>
+  <p class="prov">Centro de acopio Coopepiña · Pital · 4 nov 2026</p>
+  <p class="prov">Nombre de lugar de ejemplo. Este mock no representa un convenio ni una entrevista.</p>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <b>Alertas pendientes</b>
+      <span class="estado e-late">2</span>
+    </div>
+    <button class="btn alt" onclick="go('a-no-apto')">LM-0447 · no apto<small>Corte después del químico · incorporación en verde</small></button>
+    <button class="btn alt" onclick="go('a-ruta-atrasada')">Ruta 2 · atrasada<small>Finca Santa Rosa · ventana de la 1:00 p.m.</small></button>
+  </div>
+  <div class="map-mini" id="mapMiniA"></div>
+  <div class="card tech">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <b>Ruta 1 · 7:00 a.m.</b><span class="estado e-plan">a tiempo</span>
+    </div>
+    <div class="row"><span>Finca La Esperanza · Lote 3</span><span>4 ha</span></div>
+    <div class="row"><span>Finca El Roble · Lote 1</span><span>2 ha</span></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <b>Ruta 2 · 1:00 p.m.</b><span class="estado e-late">atrasada</span>
+    </div>
+    <div class="row"><span>Finca Santa Rosa · Lote 2</span><span>3 ha</span></div>
+    <button class="btn alt" onclick="go('a-ruta-atrasada')">Ver el atraso</button>
+  </div>
+  <button class="btn" onclick="go('a-qr')">Escaneá el QR</button>
+  <button class="btn alt" onclick="go('a-impacto')">Mirá el impacto</button>
+</section>
+
+<section class="scr" data-id="a-qr" data-t="Escaneá" data-nav="acopio">
+  <h2 style="font-size:20px;text-align:center;margin-bottom:8px">Escaneá el QR del lote</h2>
+  <div class="card" style="text-align:center">
+    <svg class="qrbox" id="qr2" style="width:168px;height:168px"></svg>
+    <p class="prov">Simulación del escáner</p>
+  </div>
+  <button class="btn" onclick="go('a-recibido')">Simulá la lectura</button>
+</section>
+
+<section class="scr" data-id="a-recibido" data-t="Recepción" data-nav="acopio">
+  <div id="okRec" style="display:none">
+    <div class="ok-anim"><svg viewBox="0 0 24 24" fill="none" stroke="#14210F" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div>
+    <h2 style="text-align:center;font-size:20px">Lote recibido</h2>
+    <div class="card tech" style="text-align:center"><b>LM-0423</b> · Finca La Esperanza<br><span class="estado e-rec">recibido en acopio</span><br><span class="ej" style="margin-top:8px;display:inline-block">ejemplo</span></div>
+  </div>
+  <div id="formRec">
+    <h2 style="font-size:20px">LM-0423 <span class="ej">ejemplo</span></h2>
+    <div class="card">
+      <div class="row"><span>Finca</span><b>La Esperanza · Pital</b></div>
+      <div class="row"><span>Corte de hoja</span><b>3 nov</b></div>
+      <div class="row"><span>Derriba</span><b>6 nov</b></div>
+      <div class="row"><span>Químicos antes del corte</span><b>Ninguno</b></div>
+    </div>
+    <label>Peso recibido (kg)</label><input inputmode="numeric" placeholder="ej. 8200">
+    <label>Destino</label>
+    <select><option>Desfibrado → fibra</option><option>Ensilaje</option><option>Pulpa → compost / biogás</option></select>
+    <button class="btn" onclick="recibirOk()">Registrá la recepción</button>
+    <button class="btn alt" onclick="go('a-no-apto')">Marcá un lote no apto<small>Otro ejemplo: corte después del químico</small></button>
+  </div>
+  <button class="btn alt" id="btnPostRec" style="display:none" onclick="go('a-home')">Volvé a rutas</button>
+</section>
+
+<section class="scr" data-id="a-no-apto" data-t="Lote no apto" data-nav="acopio">
+  <h2 style="font-size:20px">Lote no apto <span class="ej">ejemplo</span></h2>
+  <p class="prov">Pantalla de demostración. No es un dictamen de laboratorio ni un rechazo real.</p>
+  <div class="card tech">
+    <div class="row"><span>Lote</span><b>LM-0447</b></div>
+    <div class="row"><span>Finca</span><b>Ejemplo Norte · Cutris</b></div>
+    <div class="row"><span>Hectáreas</span><b>1,5 ha</b></div>
+    <div class="row"><span>Aplicación química</span><b>2 nov</b></div>
+    <div class="row"><span>Corte de hoja</span><b>4 nov</b></div>
+    <div class="row"><span>Orden de las fechas</span><b>El corte va después del químico</b></div>
+  </div>
+  <div class="card" style="text-align:center">
+    <svg class="qrbox" id="qrNo"></svg>
+    <div style="margin-top:8px"><span class="estado e-no">no apto · reasignado</span></div>
+    <p style="margin:10px 0 0">Este QR es ilustrativo. Queda marcado <b>no apto</b>.</p>
+    <p style="margin:6px 0 0">No va a fibra ni a ensilaje.</p>
+    <p style="margin:6px 0 0"><b>Destino de ejemplo:</b> incorporación en verde.</p>
+  </div>
+  <button class="btn alt" onclick="go('a-ruta-atrasada')">Ver la ruta atrasada</button>
+</section>
+
+<section class="scr" data-id="a-ruta-atrasada" data-t="Ruta atrasada" data-nav="acopio">
+  <h2 style="font-size:20px">Ruta atrasada <span class="ej">ejemplo</span></h2>
+  <p class="prov">Simulación visual. Reprogramar no envía mensajes ni mueve un camión.</p>
+  <div class="card tech">
+    <b>Ruta 2 · Finca Santa Rosa</b>
+    <div class="row"><span>Ventana prevista</span><b>1:00 p.m.</b></div>
+    <div class="row"><span>Día del mock</span><b>4 nov 2026</b></div>
+    <div class="row"><span>Lote</span><b>Lote 2 · 3 ha</b></div>
+    <div class="row"><span>Estado</span><span class="estado e-late" id="rutaEstado">atrasada</span></div>
+  </div>
+  <p class="prov" id="rutaNota">Pasada la ventana de la 1:00 p.m. Cifras y nombres de ejemplo.</p>
+  <button class="btn pina" type="button" onclick="reprogramarRuta()">Reprogramar</button>
+  <button class="btn alt" onclick="go('a-impacto')">Mirá el impacto</button>
+</section>
+
+<section class="scr" data-id="a-impacto" data-t="Impacto" data-nav="acopio">
+  <h2 style="font-size:20px">Panel de impacto <span class="ej">ejemplo</span></h2>
+  <div class="card tech"><p style="margin:0">Hectáreas sin paraquat ni quema</p><div class="big">9 ha</div></div>
+  <div class="card"><p style="margin:0">Lotes recibidos aptos</p><div class="big">3</div></div>
+  <div class="card"><p style="margin:0">Kilos aprovechados</p><div class="big">24 t</div><p class="prov">Cifras de demostración, no son datos reales.</p></div>
+  <div class="card">
+    <b>Lotes en el panel</b> <span class="ej">ejemplo</span>
+    <div class="row"><span>LM-0423 · La Esperanza</span><span class="estado e-rec">recibido</span></div>
+    <div class="row"><span>LM-0388 · El Roble</span><span class="estado e-proc">procesado</span></div>
+    <div class="row"><span>LM-0401 · Santa Rosa</span><span class="estado e-proc">procesado</span></div>
+    <div class="row"><span>LM-0447 · Ejemplo Norte</span><span class="estado e-no">no apto</span></div>
+  </div>
+  <div class="card">
+    <b>Estado de rutas</b> <span class="ej">ejemplo</span>
+    <div class="row"><span>Ruta 1 · 7:00 a.m.</span><span class="estado e-plan">a tiempo</span></div>
+    <div class="row"><span>Ruta 2 · 1:00 p.m.</span><span class="estado e-late" id="impactoRuta2">atrasada</span></div>
+    <div class="row"><span>Ajuste de la ruta 2</span><span class="estado e-ped" id="impactoReprog">sin reprogramar</span></div>
+  </div>
+  <div class="card">
+    <b>Alertas pendientes</b> <span class="ej">ejemplo</span>
+    <button class="btn alt" onclick="go('a-no-apto')">LM-0447 · no apto<small>Reasignado a incorporación en verde</small></button>
+    <button class="btn alt" onclick="go('a-ruta-atrasada')">Ruta 2 · atrasada<small>Santa Rosa · 1:00 p.m.</small></button>
+  </div>
+</section>
+
+<section class="scr" data-id="c-market" data-t="Marketplace" data-nav="comprador">
+  <h2 style="font-size:20px">Origen comprobado por QR <span class="ej">ejemplo</span></h2>
+  <p class="prov">Materia prima con historia de lote · precios por definir</p>
+  <div class="map-mini" id="mapMiniC"></div>
+  <div class="card tech">
+    <b>Fibra de hoja de piña · paca</b><br>
+    <span class="tag">QR LM-0388</span> <span class="tag">Pital</span>
+    <span class="estado e-ven" style="margin-left:4px">disponible</span>
+    <button class="btn" style="margin-top:10px" onclick="go('c-lote')">Ver origen del lote</button>
+  </div>
+  <div class="card">
+    <b>Ensilaje de rastrojo · paca 240 kg</b><br>
+    <span class="tag">QR LM-0401</span> <span class="tag">Río Cuarto</span>
+    <button class="btn alt" style="margin-top:10px" onclick="go('c-lote')">Ver origen del lote</button>
+  </div>
+  <button class="btn pina" onclick="go('c-scan')">Escaneá el QR</button>
+</section>
+
+<section class="scr" data-id="c-scan" data-t="Escaneá" data-nav="comprador">
+  <div class="card" style="text-align:center">
+    <svg class="qrbox" id="qr3" style="width:168px;height:168px"></svg>
+    <p class="prov">Simulación del escáner · QR ilustrativo</p>
+    <span class="ej">ejemplo</span>
+  </div>
+  <button class="btn" onclick="go('c-lote')">Simulá la lectura</button>
+</section>
+
+<section class="scr" data-id="c-lote" data-t="Trazabilidad" data-nav="comprador">
+  <h2 style="font-size:20px">Historia del lote LM-0388 <span class="ej">ejemplo</span></h2>
+  <div class="card">
+    <div class="step"><div class="dot">1</div><div><b>Finca</b> · Finca El Roble, Pital (Coopepiña)</div></div>
+    <div class="step"><div class="dot">2</div><div><b>Corte de hoja</b> · 12 oct, antes de cualquier químico</div></div>
+    <div class="step"><div class="dot">3</div><div><b>Acopio</b> · Centro Coopepiña · desfibrado · 14 oct</div></div>
+    <div class="step"><div class="dot">4</div><div><b>Producto</b> · fibra lavada, secada al sol y peinada · paca · 28 oct</div></div>
+    <div class="step"><div class="dot">5</div><div><b>Destino</b> · disponible en loomi · hoy</div></div>
+  </div>
+  <svg class="qrbox" id="qr4"></svg>
+  <button class="btn" onclick="toast('Solicitud de compra · prototipo (precio por definir)')">Pedí una compra</button>
+  <button class="btn alt" onclick="go('mapa');setTimeout(()=>openSheet('LM-0388'),50)">Ver en el mapa</button>
+  <div class="card">
+    <b>Historia de un lote reasignado</b> <span class="ej">ejemplo</span>
+    <p class="prov" style="margin:6px 0 8px">LM-0447 · Finca Ejemplo Norte · Cutris · 1,5 ha. QR ilustrativo, no certificable.</p>
+    <div class="step"><div class="dot">1</div><div><b>2 nov</b> · aplicación química de ejemplo</div></div>
+    <div class="step"><div class="dot">2</div><div><b>4 nov</b> · corte de hoja, después del químico</div></div>
+    <div class="step"><div class="dot">3</div><div><b>Acopio</b> · marcado no apto para fibra y ensilaje</div></div>
+    <div class="step"><div class="dot">4</div><div><b>Destino</b> · reasignado a incorporación en verde</div></div>
+    <svg class="qrbox" id="qrRe"></svg>
+    <div style="text-align:center"><span class="estado e-no">no apto · reasignado</span></div>
+  </div>
+</section>
+
+</main>
+
+<nav class="bnav" id="bnav"></nav>
+<div class="sheet-bg" id="sheetBg" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet">
+  <div class="handle" id="sheetHandle" onclick="toggleSheetSize()"></div>
+  <div class="sheet-body" id="sheetBody"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+</div></div></div>
+
+<script>
+/* =========================================================
+   FLUJO_DEMO — Raúl puede reordenar esta lista.
+   ========================================================= */
+const FLUJO_DEMO = [
+  'mapa',
+  'p-registro','p-plan','p-recol','p-ok',
+  'a-qr','a-recibido','a-no-apto','a-ruta-atrasada','a-impacto',
+  'c-scan','c-lote'
+];
+
+/* Hoy demo = 4 nov 2026 */
+const LOTES = {
+  'LM-0423':{code:'LM-0423',finca:'La Esperanza',lugar:'Pital',ha:4,estado:'en_ruta',tipo:'finca',x:190,y:300,
+    timeline:[['3 nov','Corte de hoja (sin químicos)'],['3 nov','Plan 44021 listo · trampas'],['4 nov · mañana','Recolección pedida'],['hoy','Camión en ruta → Coopepiña Pital']]},
+  'LM-0388':{code:'LM-0388',finca:'El Roble',lugar:'Pital',ha:2,estado:'vendido',tipo:'finca',x:135,y:380,
+    timeline:[['12 oct','Corte de hoja'],['14 oct','Acopio · desfibrado'],['28 oct','Fibra peinada · paca'],['hoy','Disponible en marketplace']]},
+  'LM-0401':{code:'LM-0401',finca:'Santa Rosa',lugar:'Río Cuarto',ha:3,estado:'procesado',tipo:'finca',x:245,y:195,
+    timeline:[['28 oct','Corte'],['29 oct','Acopio Río Cuarto'],['1 nov','Ensilaje · paca 240 kg'],['hoy','Listo para venta']]},
+  'LM-0410':{code:'LM-0410',finca:'Los Almendros',lugar:'Cutris',ha:5,estado:'plan_listo',tipo:'finca',x:115,y:470,
+    timeline:[['2 nov','Lote registrado'],['hoy','Plan 44021 generado']]},
+  'LM-0447':{code:'LM-0447',finca:'Ejemplo Norte',lugar:'Cutris',ha:1.5,estado:'no_apto',tipo:'finca',x:280,y:470,
+    timeline:[['2 nov','Aplicación química (ejemplo)'],['4 nov','Corte de hoja, después del químico'],['hoy','No apto para fibra ni ensilaje'],['hoy','Reasignado a incorporación en verde']]}
+};
+const PUNTOS = [
+  ...Object.values(LOTES),
+  {code:'ACO-PITAL',nombre:'Acopio Pital',tipo:'acopio',x:220,y:255,estado:'activo'},
+  {code:'ACO-RC',nombre:'Acopio R. Cuarto',tipo:'acopio',x:265,y:145,estado:'activo'},
+  {code:'COM-01',nombre:'Textiles VN',tipo:'comprador',x:80,y:210,estado:'activo'}
+];
+const ESTADOS = [
+  {id:'all',lab:'Todos'},
+  {id:'registrado',lab:'Registrado'},
+  {id:'plan_listo',lab:'Plan listo'},
+  {id:'recoleccion_pedida',lab:'Pedida'},
+  {id:'en_ruta',lab:'En ruta'},
+  {id:'recibido',lab:'Recibido'},
+  {id:'procesado',lab:'Procesado'},
+  {id:'vendido',lab:'Vendido'},
+  {id:'no_apto',lab:'No apto'}
+];
+let filtro='all', rol=null, demoOn=false, demoIdx=0, hist=['inicio'], sheetMode='peek';
+
+function estadoClass(e){return ({registrado:'e-reg',plan_listo:'e-plan',recoleccion_pedida:'e-ped',en_ruta:'e-ruta',recibido:'e-rec',procesado:'e-proc',vendido:'e-ven',activo:'e-act',no_apto:'e-no'})[e]||'e-reg'}
+function estadoLab(e){return ({registrado:'registrado',plan_listo:'plan listo',recoleccion_pedida:'recolección pedida',en_ruta:'en ruta',recibido:'recibido en acopio',procesado:'procesado',vendido:'vendido',activo:'activo',disponible:'disponible',no_apto:'no apto · reasignado'})[e]||e}
+function countEstado(id){
+  if(id==='all') return Object.keys(LOTES).length;
+  return Object.values(LOTES).filter(l=>l.estado===id).length;
+}
+
+function markerGlyph(tipo,x,y){
+  if(tipo==='finca') return `<g transform="translate(${x},${y})"><polygon points="0,-16 14,13 -14,13" fill="#1E6B3A" stroke="#FFF6DC" stroke-width="2"/><circle cy="-1" r="2.8" fill="#B7E04A"/></g>`;
+  if(tipo==='acopio') return `<g transform="translate(${x},${y})"><rect x="-14" y="-12" width="28" height="24" rx="5" fill="#F5B800" stroke="#14210F" stroke-width="1.5"/><path d="M-7 0h14M0 -6v12" stroke="#14210F" stroke-width="2" stroke-linecap="round"/></g>`;
+  return `<g transform="translate(${x},${y})"><circle r="14" fill="#E8761E" stroke="#FFF6DC" stroke-width="2"/><circle r="5" fill="#FFF6DC"/></g>`;
+}
+function mapaSVG(mini=false){
+  const pts=PUNTOS.filter(p=>{
+    if(filtro==='all') return true;
+    if(p.tipo!=='finca') return false;
+    return p.estado===filtro;
+  });
+  /* Labels fully inside [40..320] × [50..580], halo Fibra, no town clutter */
+  const LAB={
+    'LM-0423':{t:'La Esperanza',x:148,y:290,a:'end'},
+    'LM-0388':{t:'El Roble',x:135,y:408,a:'middle'},
+    'LM-0401':{t:'Santa Rosa',x:245,y:172,a:'middle'},
+    'LM-0410':{t:'Los Almendros',x:115,y:500,a:'middle'},
+    'LM-0447':{t:'Ej. Norte',x:280,y:498,a:'middle'},
+    'ACO-PITAL':{t:'Acopio Pital',x:248,y:250,a:'start'},
+    'ACO-RC':{t:'Acopio R. Cuarto',x:265,y:120,a:'middle'},
+    'COM-01':{t:'Textiles VN',x:80,y:185,a:'middle'}
+  };
+  let marks='';
+  pts.forEach(p=>{
+    const live=p.estado==='en_ruta'||p.estado==='recoleccion_pedida';
+    const col=p.tipo==='finca'?'#1E6B3A':p.tipo==='acopio'?'#F5B800':'#E8761E';
+    if(live) marks+=`<circle class="pulse" cx="${p.x}" cy="${p.y}" r="11" fill="none" stroke="${col}" stroke-width="2"/>`;
+    marks+=`<g class="pt" onclick="openSheet('${p.code}')">${markerGlyph(p.tipo,p.x,p.y)}</g>`;
+    if(!mini && LAB[p.code]){
+      const L=LAB[p.code];
+      marks+=`<text x="${L.x}" y="${L.y}" text-anchor="${L.a}" font-size="13" font-family="Inter,system-ui,sans-serif" font-weight="600" stroke="#FFF6DC" stroke-width="4" paint-order="stroke fill" stroke-linejoin="round" fill="#14210F">${L.t}</text>`;
+    }
+  });
+  /* Route clear of Los Almendros & Textiles labels */
+  const ruta='M135 455 C165 395, 185 345, 208 305 S235 230, 268 155';
+  return `<svg class="map-svg" viewBox="0 0 360 640" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="terrain" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#D8E4B8"/><stop offset="55%" stop-color="#E5E6C4"/><stop offset="100%" stop-color="#D2C89A"/>
+      </linearGradient>
+      <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(35)">
+        <line x1="0" y1="0" x2="0" y2="8" stroke="#1E6B3A" stroke-width=".4" opacity=".12"/>
+      </pattern>
+    </defs>
+    <rect width="360" height="640" fill="#E5E6C4"/>
+    <!-- Region inset ≥24 units from viewBox edges -->
+    <path d="M48 480 C60 340, 100 210, 165 145 C225 85, 275 80, 308 130 C335 170, 332 270, 315 370 C298 470, 250 545, 175 570 C100 592, 55 560, 48 480 Z" fill="url(#terrain)" stroke="#1E6B3A" stroke-width="2"/>
+    <path d="M48 480 C60 340, 100 210, 165 145 C225 85, 275 80, 308 130 C335 170, 332 270, 315 370 C298 470, 250 545, 175 570 C100 592, 55 560, 48 480 Z" fill="url(#hatch)"/>
+    <ellipse cx="175" cy="320" rx="55" ry="30" fill="#C9D6A5" opacity=".4"/>
+    <ellipse cx="245" cy="220" rx="38" ry="20" fill="#C9D6A5" opacity=".32"/>
+    <ellipse cx="130" cy="430" rx="32" ry="18" fill="#B7C98E" opacity=".28"/>
+    <path d="M70 520 C130 440, 180 360, 220 280 S280 170, 310 140" fill="none" stroke="#6B9A6E" stroke-width="3.2" stroke-linecap="round" opacity=".6"/>
+    <path d="M60 280 C110 300, 155 350, 190 430" fill="none" stroke="#9BB88E" stroke-width="2" opacity=".45"/>
+    <path d="${ruta}" fill="none" stroke="#8A7A4A" stroke-width="2" stroke-dasharray="6 4"/>
+    <path d="M90 190 C140 230, 180 255, 215 258" fill="none" stroke="#8A7A4A" stroke-width="1.3" stroke-dasharray="4 3"/>
+    ${mini?'':`<rect x="16" y="20" width="132" height="22" rx="8" fill="#FFF6DC" stroke="#1E6B3A" stroke-width="1"/>
+    <text x="82" y="35" text-anchor="middle" font-size="9" font-family="IBM Plex Mono,monospace" fill="#4F5642" letter-spacing="0.4">ZONA NORTE · EJEMPLO</text>
+    <g stroke="#4F5642" stroke-width="1" opacity=".2">
+      <path d="M320 600 h5 M322.5 597.5 v5"/><path d="M40 60 h5 M42.5 57.5 v5"/>
+    </g>`}
+    <path d="${ruta}" fill="none" stroke="#F5B800" stroke-width="2.4" opacity=".95"/>
+    ${marks}
+    <g>
+      <animateMotion dur="14s" repeatCount="indefinite" rotate="auto" path="${ruta}"/>
+      <rect x="-10" y="-5" width="20" height="10" rx="2" fill="#14210F"/>
+      <rect x="4" y="-3.5" width="7" height="7" rx="1" fill="#F5B800"/>
+      <circle cx="-4" cy="6" r="2.2" fill="#FFF6DC"/><circle cx="7" cy="6" r="2.2" fill="#FFF6DC"/>
+    </g>
+  </svg>`;
+}
+function renderFiltros(){
+  const el=document.getElementById('filtros'); if(!el) return;
+  el.innerHTML=ESTADOS.map(e=>{
+    const n=countEstado(e.id);
+    return `<button type="button" class="chip ${filtro===e.id?'on':''}" onclick="setFiltro('${e.id}')">${e.lab}<span class="n">${n}</span></button>`;
+  }).join('');
+}
+function setFiltro(id){filtro=id;renderFiltros();paintMaps()}
+function paintMaps(){
+  const full=document.getElementById('mapaSvgHost');
+  if(full) full.innerHTML=mapaSVG(false);
+  ['mapMiniP','mapMiniA','mapMiniC'].forEach(id=>{
+    const n=document.getElementById(id); if(n) n.innerHTML=mapaSVG(true);
+  });
+  renderFiltros();
+}
+
+function openSheet(code){
+  const p=PUNTOS.find(x=>x.code===code)||LOTES[code];
+  if(!p) return;
+  document.getElementById('toast').classList.remove('on');
+  const body=document.getElementById('sheetBody');
+  const sheet=document.getElementById('sheet');
+  sheetMode='peek';
+  sheet.classList.remove('full'); sheet.classList.add('peek');
+  if(p.tipo==='finca'||LOTES[code]){
+    const L=LOTES[code]||p;
+    body.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:start;gap:8px">
+        <div><div class="mono" style="color:var(--hoja)">Lote ${L.code}</div>
+        <h2 style="font-size:20px;margin:4px 0">Finca ${L.finca}</h2>
+        <div class="prov">${L.lugar} · ${L.ha} ha</div></div>
+        <span class="ej">ejemplo</span>
+      </div>
+      <div style="margin:10px 0"><span class="estado ${estadoClass(L.estado)}">${estadoLab(L.estado)}</span></div>
+      <svg class="qrbox" id="qrSheet"></svg>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0 2px">
+        <b>Línea de tiempo</b>
+        <button type="button" class="mono" style="background:0;border:0;color:var(--hoja);cursor:pointer" onclick="toggleSheetSize()">Expandir ↕</button>
+      </div>
+      ${(L.timeline||[]).map(([d,t])=>`<div class="step"><div class="dot" style="width:8px;height:8px;margin-top:7px"></div><div><b>${d}</b> · ${t}</div></div>`).join('')}
+      <button class="btn alt" onclick="closeSheet()">Cerrar</button>`;
+    setTimeout(()=>qr('qrSheet'),20);
+  } else {
+    body.innerHTML=`
+      <div class="mono" style="color:var(--hoja)">${p.tipo}</div>
+      <h2 style="font-size:20px;margin:4px 0">${p.nombre}</h2>
+      <span class="ej">ejemplo</span>
+      <p class="prov" style="margin:12px 0">Punto del mapa vivo · datos ficticios para la demo.</p>
+      <button class="btn alt" onclick="closeSheet()">Cerrar</button>`;
+  }
+  document.getElementById('sheetBg').classList.add('on');
+  document.getElementById('mapLegend').style.opacity='0';
+}
+function toggleSheetSize(){
+  const sheet=document.getElementById('sheet');
+  if(!sheet.classList.contains('peek')&&!sheet.classList.contains('full')) return;
+  sheetMode=sheetMode==='peek'?'full':'peek';
+  sheet.classList.toggle('peek',sheetMode==='peek');
+  sheet.classList.toggle('full',sheetMode==='full');
+}
+function closeSheet(){
+  const sheet=document.getElementById('sheet');
+  sheet.classList.remove('peek','full');
+  document.getElementById('sheetBg').classList.remove('on');
+  document.getElementById('mapLegend').style.opacity='1';
+  sheetMode='peek';
+}
+
+function qr(id){
+  const s=document.getElementById(id); if(!s) return;
+  let h='',seed=(id.charCodeAt(2)||7)*13; const n=25,c=120/n;
+  const r=()=>{seed=(seed*9301+49297)%233280;return seed/233280};
+  const f=(x,y)=>{h+=`<rect x="${(x*c+2).toFixed(2)}" y="${(y*c+2).toFixed(2)}" width="${(c*.92).toFixed(2)}" height="${(c*.92).toFixed(2)}" rx=".4"/>`};
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+    const fin=(a,b)=>a<7&&b<7; const inF=fin(x,y)||fin(n-1-x,y)||fin(x,n-1-y);
+    const cx=Math.abs(x-12),cy=Math.abs(y-12); if(cx<3&&cy<3) continue; // hole for logo
+    if(inF){const lx=x<7?x:n-1-x,ly=y<7?y:n-1-y;if(lx==0||lx==6||ly==0||ly==6||(lx>1&&lx<5&&ly>1&&ly<5))f(x,y)}
+    else if(r()>.48)f(x,y);
+  }
+  s.setAttribute('viewBox','0 0 124 124');
+  s.innerHTML=`<rect width="124" height="124" rx="8" fill="#FFFBEE"/><g fill="#14210F">${h}</g>
+    <circle cx="62" cy="62" r="12" fill="#FFF6DC"/><circle cx="62" cy="62" r="9" fill="#1E6B3A"/>
+    <text x="62" y="65" text-anchor="middle" font-size="7" font-family="Bricolage Grotesque,sans-serif" font-weight="800" fill="#FFF6DC">l</text>`;
+}
+
+const ICONS={
+  finca:'<svg viewBox="0 0 24 24"><path d="M4 20V10l8-6 8 6v10"/><path d="M9 20v-6h6v6"/></svg>',
+  plan:'<svg viewBox="0 0 24 24"><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v4h4M9 12h6M9 16h6"/></svg>',
+  mapa:'<svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>',
+  bono:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.5 10.5c0-1 1-2 2.5-2s2.5.8 2.5 2-1 1.5-2.5 2-2.5 1-2.5 2 1 2 2.5 2 2.5-.8 2.5-2"/></svg>',
+  rutas:'<svg viewBox="0 0 24 24"><rect x="3" y="10" width="11" height="7" rx="1"/><path d="M14 12h4l3 3v2h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>',
+  qr:'<svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/><path d="M14 14h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z"/></svg>',
+  impacto:'<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>',
+  mercado:'<svg viewBox="0 0 24 24"><path d="M4 8h16l-1.5 11H5.5z"/><path d="M8 8V6a4 4 0 018 0v2"/></svg>',
+  origen:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.5 5.5l2 2M16.5 16.5l2 2M5.5 18.5l2-2M16.5 7.5l2-2"/></svg>'
+};
+
+function navHTML(role){
+  const maps={
+    pinero:[['p-home','Finca','finca'],['p-plan','Plan','plan'],['mapa','Mapa','mapa'],['p-bono','Bono','bono']],
+    acopio:[['a-home','Rutas','rutas'],['a-qr','QR','qr'],['mapa','Mapa','mapa'],['a-impacto','Impacto','impacto']],
+    comprador:[['c-market','Mercado','mercado'],['c-scan','QR','qr'],['mapa','Mapa','mapa'],['c-lote','Origen','origen']]
+  };
+  return (maps[role]||[]).map(([id,lab,ic])=>`<button type="button" data-go="${id}" onclick="go('${id}')">${ICONS[ic]||''}<span>${lab}</span></button>`).join('');
+}
+
+function go(id){
+  closeSheet();
+  const el=document.querySelector(`section[data-id="${id}"]`);
+  if(!el) return;
+  document.querySelectorAll('section.scr').forEach(s=>s.classList.remove('on'));
+  el.classList.add('on');
+  const main=document.getElementById('main');
+  main.classList.toggle('nopad', el.dataset.nopad==='1');
+  main.scrollTop=0;
+  document.getElementById('back').style.visibility = id==='inicio'?'hidden':'visible';
+  const tit=document.getElementById('tit');
+  tit.innerHTML = id==='inicio' ? '' : (el.dataset.t||'loomi');
+  if(!rol){ if(id.startsWith('p-')) rol='pinero'; else if(id.startsWith('a-')) rol='acopio'; else if(id.startsWith('c-')) rol='comprador'; }
+  const nav=document.getElementById('bnav');
+  const role=el.dataset.nav;
+  if((role||id==='mapa') && rol){
+    nav.innerHTML=navHTML(rol);
+    nav.classList.add('on');
+    nav.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.go===id || (id==='mapa'&&b.dataset.go==='mapa')));
+  } else { nav.classList.remove('on'); nav.innerHTML=''; }
+  if(hist[hist.length-1]!==id) hist.push(id);
+  ['qr1','qr2','qr3','qr4','qrNo','qrRe'].forEach(qr);
+  paintMaps();
+  if(demoOn){ const i=FLUJO_DEMO.indexOf(id); if(i>=0) demoIdx=i; updateDemoLab(); }
+  location.hash=id;
+}
+function atras(){ if(hist.length>1){hist.pop(); go(hist.pop());} else go('inicio'); }
+function entrar(r){ rol=r; go(r==='pinero'?'p-home':r==='acopio'?'a-home':'c-market'); }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('on'),2400); }
+function recibirOk(){
+  document.getElementById('formRec').style.display='none';
+  document.getElementById('okRec').style.display='block';
+  document.getElementById('btnPostRec').style.display='block';
+  toast('Recepción registrada · LM-0423 · ejemplo');
+}
+function reprogramarRuta(){
+  const el=document.getElementById('rutaEstado');
+  if(el){ el.textContent='reprogramada · 4:00 p.m.'; el.className='estado e-plan'; }
+  const nota=document.getElementById('rutaNota');
+  if(nota) nota.textContent='Ejemplo: la ruta queda a las 4:00 p.m. No se avisó a nadie.';
+  const late=document.getElementById('impactoRuta2');
+  if(late){ late.textContent='reprogramada'; late.className='estado e-plan'; }
+  const adj=document.getElementById('impactoReprog');
+  if(adj){ adj.textContent='4:00 p.m.'; adj.className='estado e-plan'; }
+  toast('Ruta reprogramada · ejemplo, sin envío');
+}
+function toggleDemo(){
+  demoOn=!demoOn;
+  document.getElementById('demoBar').classList.toggle('on',demoOn);
+  if(demoOn){
+    const cur=(location.hash||'#inicio').slice(1).split('?')[0];
+    let i=FLUJO_DEMO.indexOf(cur);
+    if(i<0){ i=0; go(FLUJO_DEMO[0]); }
+    demoIdx=i;
+    updateDemoLab();
+  }
+}
+function updateDemoLab(){ document.getElementById('demoLab').textContent=`${demoIdx+1}/${FLUJO_DEMO.length} · ${FLUJO_DEMO[demoIdx]}`; }
+function demoNext(){ demoIdx=Math.min(FLUJO_DEMO.length-1,demoIdx+1); go(FLUJO_DEMO[demoIdx]); updateDemoLab(); }
+function demoPrev(){ demoIdx=Math.max(0,demoIdx-1); go(FLUJO_DEMO[demoIdx]); updateDemoLab(); }
+
+addEventListener('hashchange',()=>{ const id=(location.hash||'').slice(1).split('?')[0]; if(id) go(id); });
+const _qs=new URLSearchParams(location.search);
+if(_qs.get('shot')==='1') document.documentElement.classList.add('shot');
+const _boot=(location.hash||'#inicio').slice(1).split('?')[0]||'inicio';
+go(_boot);
+if(_qs.get('sheet')){ openSheet(_qs.get('sheet')); if(_qs.get('full')==='1'){ sheetMode='full'; document.getElementById('sheet').classList.remove('peek'); document.getElementById('sheet').classList.add('full'); } }
+if(_qs.get('ok')==='1'){ if(document.getElementById('formRec')) recibirOk(); }
+</script>
+</body>
+</html>
